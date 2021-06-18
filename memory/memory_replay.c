@@ -51,11 +51,12 @@ int main()
 	int replay_memory,sys_memory,__memory;
 	sys_memory=current_sys_memory(s_info);
     	fp = fopen("./memory_record", "r");
+	//fp = fopen("./mem_usage_vm2.log", "r");
    	if (fp == NULL)
         	exit(EXIT_FAILURE);
 
     	while ((read = getline(&line, &len, fp)) != -1) {
-		replay_memory=atoi(line)*81668;
+		replay_memory=atoi(line)*0.9;
 		if(replay_memory<sys_memory){ free_all();goto finish;}
 		__memory=(replay_memory-sys_memory)/(sizeof(void)*1024);
 		
@@ -68,7 +69,7 @@ int main()
 			goto finish;
 finish:
 		printf("needed_memory: %dmb,already malloc_memory %dmb\n",(replay_memory-sys_memory)/(sizeof(void)*1024),malloc_memory);
-		sleep(1);
+		usleep(250000);
     	}
 
     	fclose(fp);

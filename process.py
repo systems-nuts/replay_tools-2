@@ -64,11 +64,6 @@ def disk_write_of_vm(i):
     for vv in vm_time:
         write.append(vv[i-1][3])
     return write
-cpu=cpu_of_vm(2)
-tx=network_tx_of_vm(2)
-rx=network_rx_of_vm(2)
-read=disk_read_of_vm(2)
-write=disk_write_of_vm(2)
 def cpu_change(i):
     u=float(i)
     ii=u*100000
@@ -79,14 +74,18 @@ def cpu_change(i):
     os.system(cmd)
 
 def disk_io_change(i,j):
-    cmd1="echo " + "8:0" + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
-    cmd2="echo " + "8:0" + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
+    if i == '0':
+        i = '1000'
+    if j=='0':
+        j= '1000'
+    cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
+    cmd2="echo " + "8:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
     os.system(cmd1)
     os.system(cmd2)
 
 def network_change(i):
     if i == '':
-        continue
+        return 
     j=int(i)
     j=int((j*32)/1024)
     if j == 0:
@@ -95,19 +94,20 @@ def network_change(i):
     cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit"
     os.system(cmd)
 
+
+disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=1M count=1024 oflag=direct; done"
+disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
 c=0
-for i in tx:
-    c =c+1
-    if i == '':
-        continue
-    j=int(i)
-    #print(i)
-    j=int((j*32)/1024)
-    if j == 0:
-        j=1
-    i = str(j)
-    cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit" 
-    print(i,c)
-    os.system(cmd)
+
+cpu=cpu_of_vm(2)
+tx=network_tx_of_vm(2)
+rx=network_rx_of_vm(2)
+read=disk_read_of_vm(2)
+write=disk_write_of_vm(2)
+for i,j,k,l in zip(tx,read,write,cpu):
+    print(i,j,k)
+    network_change(i)
+    disk_io_change(j,k)
+    cpu_change(l)
     time.sleep(0.25)
 
