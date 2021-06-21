@@ -1,6 +1,7 @@
 import csv
 import time
 import os
+import subprocess
 from itertools import islice
 vm_time=[]
 with open('record.csv', newline='', encoding='utf-8') as f:
@@ -98,12 +99,23 @@ def network_change(i):
 disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=1M count=1024 oflag=direct; done"
 disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
 c=0
+def init():
+    disk_io_change("10240","10240")
+    network_change("10240")
+    cpu_change("0")
+    disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=1M count=100 oflag=direct; done"
+    disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
+    subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
+    subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
+    subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
+    subprocess.Popen("sudo python3 fake_cpu.py",shell=True,stdout=None)
 
 cpu=cpu_of_vm(2)
 tx=network_tx_of_vm(2)
 rx=network_rx_of_vm(2)
 read=disk_read_of_vm(2)
 write=disk_write_of_vm(2)
+init()
 for i,j,k,l in zip(tx,read,write,cpu):
     print(i,j,k)
     network_change(i)
