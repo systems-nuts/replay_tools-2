@@ -38,6 +38,8 @@ all input files please put AT SAME PLACE with the scripts or executable
 4. replay without cpu
 ```
 To replay without cpu
+Please checkout host_rx.py and also change the IP address of the guest vm that going to replay.
+
 from inside: 
 sudo sh python3 process_no_cpu.py
 outside:
@@ -63,9 +65,11 @@ REMEMBER TO CLEAN THE MACHINES! USE KILL or KILLALL.
 
 This time, the replay cpu will minus the replay overhead first then replay.
 Then inside:
+Please checkout host_rx.py and also change the IP address of the guest vm that going to replay.
+
 sudo sh python3 process.py
 outside:
-sudo sh python3 host_rx.py
+sudo sh python3 host_rx.py 
 In the meanwhile you should start record. 
 
 
