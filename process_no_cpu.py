@@ -4,7 +4,6 @@ import os
 import subprocess
 from itertools import islice
 vm_time=[]
-cpu_overhead=[]
 with open('record.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
@@ -20,21 +19,6 @@ with open('record.csv', newline='', encoding='utf-8') as f:
                 vm[c][5]=row[i+8]
                 c+=1
         vm_time.append(vm)
-with open('cpu_overhead.csv', newline='', encoding='utf-8') as f:
-    reader = csv.reader(f)
-    for row in islice(reader, 1, None):
-        vm=[[0 for x in range(6)] for y in range(8)]
-        c=0
-        for i in range(19,len(row)-1):
-            if (i-19)%10==0:
-                vm[c][0]=row[i+2]
-                vm[c][1]=row[i+4]
-                vm[c][2]=row[i+5]
-                vm[c][3]=row[i+6]
-                vm[c][4]=row[i+7]
-                vm[c][5]=row[i+8]
-                c+=1
-        cpu_overhead.append(vm)
 #print(vm_time)
 def print_log():
     for vv in vm_time:
@@ -44,14 +28,6 @@ def print_log():
                 print(j,' ',end='')
             print()
         print()
-
-def cpu_of_overhead(i):
-    cpu=[]
-    if i==0:
-        i=1
-    for vv in cpu_overhead:
-        cpu.append(vv[i-1][0])
-    return cpu
 
 def cpu_of_vm(i):
     cpu=[]
@@ -89,10 +65,9 @@ def disk_write_of_vm(i):
     for vv in vm_time:
         write.append(vv[i-1][3])
     return write
-def cpu_change(i,l):
+def cpu_change(i):
     u=float(i)
-    o=float(l)
-    ii=(u-o)*100000
+    ii=u*100000
     ii=int(ii)
     if ii<=0:
         ii=1000
@@ -118,10 +93,11 @@ def network_change(i):
         j=10
     i = str(j)
     cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit"
+    print(cmd)
     os.system(cmd)
 
+
 cpu=cpu_of_vm(2)
-overhead=cpu_of_overhead(8)
 tx=network_tx_of_vm(2)
 rx=network_rx_of_vm(2)
 read=disk_read_of_vm(2)
@@ -129,27 +105,23 @@ write=disk_write_of_vm(2)
 
 disk_io_change("10240","10240")
 network_change("10000")
-cpu_change("0","0")
-network_tx_cmd = "sudo cgexec -g net_cls:replay ./network/ITGSend -a 192.168.10.1  -T udp -t 1000000 -c 80000"
+network_tx_cmd = "sudo cgexec -g net_cls:replay ./network/ITGSend -a 192.168.10.1  -T udp -t 1000000 -c 100000"
 network_rx_cmd = "sudo ./network/ITGRecv"
 disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=100M count=5 oflag=direct; done"
 disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
 a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
 c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
-d=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
-e=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
+d=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
 time.sleep(3)
-f=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
+e=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
 
-
-for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
+for i,d,j,k,l in zip(tx,rx,read,write,cpu):
     network_change(i)
     disk_io_change(j,k)
-    cpu_change(l,ll)
     time.sleep(0.25)
+
 a.terminate()
 b.terminate()
 c.terminate()
-d.terminate()
