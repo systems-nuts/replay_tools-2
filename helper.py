@@ -1,17 +1,21 @@
 import csv
 import time
 import os
-import subprocess
 from itertools import islice
+
 #########################################
 #########################################
 which_row_of_replay_csv=2
 which_row_of_cpu_over_head_csv=8
+file_of_check='record.csv'
 #########################################
 #########################################
 
+
+
+
 vm_time=[]
-with open('rx.csv', newline='', encoding='utf-8') as f:
+with open(file_of_check, newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
         vm=[[0 for x in range(6)] for y in range(8)]
@@ -82,12 +86,8 @@ def cpu_change(i):
     os.system(cmd)
 
 def disk_io_change(i,j):
-    if i == '0':
-        i = '1000'
-    if j=='0':
-        j= '1000'
-    cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
-    cmd2="echo " + "8:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
+    cmd1="echo " + "8:0" + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
+    cmd2="echo " + "8:0" + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
     os.system(cmd1)
     os.system(cmd2)
 
@@ -99,18 +99,9 @@ def network_change(i):
     if j == 0:
         j=1
     i = str(j)
-    cmd="sudo tc class change dev br1 parent 10: classid 10:1 htb rate "+ i+"kbit"
+    cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit"
     os.system(cmd)
 
-
-c=0
-def init():
-    network_change("10240")
-    network_tx_cmd = "sudo cgexec -g net_cls:client ./ITGSend -a 192.168.10.53  -T udp -t 1000000 -c 20000"
-    network_rx_cmd = "sudo ./ITGRecv"
-    subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
-    time.sleep(3)
-    subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
 
 cpu=cpu_of_vm(which_row_of_replay_csv)
@@ -118,8 +109,8 @@ tx=network_tx_of_vm(which_row_of_replay_csv)
 rx=network_rx_of_vm(which_row_of_replay_csv)
 read=disk_read_of_vm(which_row_of_replay_csv)
 write=disk_write_of_vm(which_row_of_replay_csv)
-init()
-for i in rx:
-    network_change(i)
-    time.sleep(0.25)
+
+
+for i,j,k,m,n in zip(cpu,tx,rx,read,write):
+    print("cpu",i,"tx",j,"rx",k,"disk_read",m,"disk_write",n)
 

@@ -3,6 +3,14 @@ import time
 import os
 import subprocess
 from itertools import islice
+
+#########################################
+#########################################
+which_row_of_replay_csv=2
+which_row_of_cpu_over_head_csv=8
+#########################################
+#########################################
+
 vm_time=[]
 with open('record.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
@@ -96,12 +104,11 @@ def network_change(i):
     print(cmd)
     os.system(cmd)
 
-
-cpu=cpu_of_vm(2)
-tx=network_tx_of_vm(2)
-rx=network_rx_of_vm(2)
-read=disk_read_of_vm(2)
-write=disk_write_of_vm(2)
+cpu=cpu_of_vm(which_row_of_replay_csv)
+tx=network_tx_of_vm(which_row_of_replay_csv)
+rx=network_rx_of_vm(which_row_of_replay_csv)
+read=disk_read_of_vm(which_row_of_replay_csv)
+write=disk_write_of_vm(which_row_of_replay_csv)
 
 disk_io_change("10240","10240")
 network_change("10000")

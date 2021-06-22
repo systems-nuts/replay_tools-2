@@ -3,8 +3,18 @@ import time
 import os
 import subprocess
 from itertools import islice
+
+
+#########################################
+#########################################
+which_row_of_replay_csv=2
+which_row_of_cpu_over_head_csv=8
+#########################################
+#########################################
+
 vm_time=[]
 cpu_overhead=[]
+
 with open('record.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
@@ -97,7 +107,7 @@ def cpu_change(i,l):
     if ii<=0:
         ii=1000
     cmd="echo "+str(ii)+" >/sys/fs/cgroup/cpu/replay/cpu.cfs_quota_us "
-    os.system(cmd)
+    subprocess.Popen(cmd,shell=True,stdout=None)
 
 def disk_io_change(i,j):
     if i == '0':
@@ -106,8 +116,8 @@ def disk_io_change(i,j):
         j= '1000'
     cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
     cmd2="echo " + "8:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
-    os.system(cmd1)
-    os.system(cmd2)
+    subprocess.Popen(cmd1,shell=True,stdout=None)
+    subprocess.Popen(cmd2,shell=True,stdout=None)
 
 def network_change(i):
     if i == '':
@@ -118,21 +128,21 @@ def network_change(i):
         j=10
     i = str(j)
     cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit"
-    os.system(cmd)
+    subprocess.Popen(cmd,shell=True,stdout=None)
 
-cpu=cpu_of_vm(2)
-overhead=cpu_of_overhead(8)
-tx=network_tx_of_vm(2)
-rx=network_rx_of_vm(2)
-read=disk_read_of_vm(2)
-write=disk_write_of_vm(2)
+cpu=cpu_of_vm(which_row_of_replay_csv)
+overhead=cpu_of_overhead(which_row_of_cpu_over_head_csv)
+tx=network_tx_of_vm(which_row_of_replay_csv)
+rx=network_rx_of_vm(which_row_of_replay_csv)
+read=disk_read_of_vm(which_row_of_replay_csv)
+write=disk_write_of_vm(which_row_of_replay_csv)
 
 disk_io_change("10240","10240")
 network_change("10000")
 cpu_change("0","0")
 network_tx_cmd = "sudo cgexec -g net_cls:replay ./network/ITGSend -a 192.168.10.1  -T udp -t 1000000 -c 80000"
 network_rx_cmd = "sudo ./network/ITGRecv"
-disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=100M count=5 oflag=direct; done"
+disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=1000M count=10 oflag=direct; done"
 disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
 a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
@@ -145,11 +155,15 @@ f=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
 
 for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
+    start=time.time()
     network_change(i)
     disk_io_change(j,k)
     cpu_change(l,ll)
+    end=time.time()
     time.sleep(0.25)
+
+disk_io_change("102400","102400")
+network_change("10000")
 a.terminate()
 b.terminate()
 c.terminate()
-d.terminate()
