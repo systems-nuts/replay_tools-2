@@ -7,6 +7,7 @@ from itertools import islice
 #########################################
 which_row_of_replay_csv=2
 which_row_of_cpu_over_head_csv=8
+guest_ip_address="192.168.10.54"
 #########################################
 #########################################
 
@@ -106,7 +107,9 @@ def network_change(i):
 c=0
 def init():
     network_change("10240")
-    network_tx_cmd = "sudo cgexec -g net_cls:client ./ITGSend -a 192.168.10.53  -T udp -t 1000000 -c 20000"
+    network_tx_cmd = "sudo cgexec -g net_cls:client ./ITGSend -a " + guest_ip_address + " -T udp -t 1000000 -c 20000"
+    print(network_tx_cmd)
+    print("please check the guest ip is correct",guest_ip_address)
     network_rx_cmd = "sudo ./ITGRecv"
     subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
     time.sleep(3)
