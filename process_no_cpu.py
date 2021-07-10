@@ -6,7 +6,7 @@ from itertools import islice
 
 #########################################
 #########################################
-which_row_of_replay_csv=4
+which_row_of_replay_csv=1
 which_row_of_cpu_over_head_csv=8
 #########################################
 #########################################
@@ -119,8 +119,8 @@ network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c 192.168.10.1 -p 5001 -t
 network_rx_cmd = "sudo iperf -s -u"
 disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime=200  -filename /dev/vda -direct=1 --ioengine=libaio  >/dev/null"
 disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=200 > /dev/null"
-a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
-b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
+#a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
+#b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
 c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
 d=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
 #f=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
@@ -130,7 +130,7 @@ e=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 c=0
 for i,d,j,k,l in zip(tx,rx,read,write,cpu):
     start=time.time()
-    disk_io_change(j,k)
+#    disk_io_change(j,k)
     network_change(i)
  #   cpu_change(l)
     end=time.time()
