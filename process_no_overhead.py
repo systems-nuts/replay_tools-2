@@ -7,7 +7,7 @@ from itertools import islice
 
 #########################################
 #########################################
-which_row_of_replay_csv=2
+which_row_of_replay_csv=1
 which_row_of_cpu_over_head_csv=8
 #########################################
 #########################################
@@ -18,7 +18,7 @@ cpu_overhead=[]
 with open('record.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
-        vm=[[0 for x in range(6)] for y in range(8)]
+        vm=[[0 for x in range(6)] for y in range(12)]
         c=0
         for i in range(19,len(row)-1):
             if (i-19)%10==0:
@@ -155,7 +155,7 @@ disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=
 disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
 #a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 #b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
-c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
+#c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
 d=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
 #e=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
 #time.sleep(3)
@@ -163,14 +163,15 @@ d=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,st
 
 
 
-for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
+#for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
+for i,d,j,k,l in zip(tx,rx,read,write,cpu):
     start=time.time()
    # network_change(i)
    # disk_io_change(j,k)
    # cpu_change(l,ll)
     cpu_change_no_overhead(l)
     end=time.time()
-    time.sleep(0.25)
+    time.sleep(1.6)
 
 #disk_io_change("102400","102400")
 #network_change("10000")

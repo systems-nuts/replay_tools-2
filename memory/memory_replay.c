@@ -68,8 +68,7 @@ int main()
 		else
 			goto finish;
 finish:
-		printf("needed_memory: %dmb,already malloc_memory %dmb\n",(replay_memory-sys_memory)/(sizeof(void)*1024),malloc_memory);
-		usleep(250000);
+		usleep(1000000);
     	}
 
     	fclose(fp);
