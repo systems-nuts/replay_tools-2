@@ -74,10 +74,12 @@ def disk_write_of_vm(i):
         write.append(vv[i-1][3])
     return write
 def cpu_change(i):
+    if i == "":
+        i=-1
     u=float(i)
-    ii=u*50000
+    ii=u*100000
     ii=int(ii)
-    if ii<=0:
+    if ii<=1000:
         ii=1000
     cmd="echo "+str(ii)+" >/sys/fs/cgroup/cpu/replay/cpu.cfs_quota_us "
     subprocess.Popen(cmd,shell=True,stdout=None)
@@ -97,7 +99,7 @@ def network_change(i):
     if i == '':
         return 
     j=int(i)
-    j=int((j*38)/1000)
+    j=int((j*27)/1024)
     if j == 0:
         j=10000
     i = str(j)
@@ -115,15 +117,15 @@ disk_io_change("10240","10240")
 network_change("10000")
 #network_tx_cmd = "sudo cgexec -g net_cls:replay ./network/ITGSend -a 192.168.10.1  -T udp -t 1000000 -c 40000"
 #network_rx_cmd = "sudo ./network/ITGRecv"
-network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c 192.168.10.1 -p 5001 -t 300 -u -b 1000mb"
+network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c 192.168.10.1 -p 5001 -t 600 -u -b 50mb"
 network_rx_cmd = "sudo iperf -s -u"
-disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime=200  -filename /dev/vda -direct=1 --ioengine=libaio  >/dev/null"
+disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime=600  -filename /dev/vda -direct=1 --ioengine=libaio  >/dev/null"
 disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=200 > /dev/null"
 #a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 #b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
-c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
+c=subprocess.Popen("sudo ./memory/a.out ",shell=True,stdout=None)
 d=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
-#f=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
+f=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
 time.sleep(3)
 e=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
@@ -132,8 +134,8 @@ for i,d,j,k,l in zip(tx,rx,read,write,cpu):
     start=time.time()
 #    disk_io_change(j,k)
     network_change(i)
- #   cpu_change(l)
+    cpu_change(l)
     end=time.time()
-    if end-start<0.25:
-        time.sleep(0.25-(end-start))
+    if end-start<0.3:
+        time.sleep(0.3-(end-start))
 
