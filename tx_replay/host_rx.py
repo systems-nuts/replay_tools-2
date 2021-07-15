@@ -1,9 +1,18 @@
 import csv
 import time
 import os
+import subprocess
 from itertools import islice
+#########################################
+#########################################
+which_row_of_replay_csv=2
+which_row_of_cpu_over_head_csv=8
+guest_ip_address="192.168.10.54"
+#########################################
+#########################################
+
 vm_time=[]
-with open('record.csv', newline='', encoding='utf-8') as f:
+with open('rx.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
         vm=[[0 for x in range(6)] for y in range(8)]
@@ -74,8 +83,12 @@ def cpu_change(i):
     os.system(cmd)
 
 def disk_io_change(i,j):
-    cmd1="echo " + "8:0" + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
-    cmd2="echo " + "8:0" + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
+    if i == '0':
+        i = '1000'
+    if j=='0':
+        j= '1000'
+    cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
+    cmd2="echo " + "8:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
     os.system(cmd1)
     os.system(cmd2)
 
@@ -87,22 +100,29 @@ def network_change(i):
     if j == 0:
         j=1
     i = str(j)
-    cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit"
+    cmd="sudo tc class change dev br1 parent 10: classid 10:1 htb rate "+ i+"kbit"
     os.system(cmd)
 
 
-disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=1M count=1024 oflag=direct; done"
-disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
 c=0
+def init():
+    network_change("10240")
+    network_tx_cmd = "sudo cgexec -g net_cls:client ./ITGSend -a " + guest_ip_address + " -T udp -t 1000000 -c 20000"
+    print(network_tx_cmd)
+    print("please check the guest ip is correct",guest_ip_address)
+    network_rx_cmd = "sudo ./ITGRecv"
+    subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
+    time.sleep(3)
+    subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
-cpu=cpu_of_vm(2)
-tx=network_tx_of_vm(2)
-rx=network_rx_of_vm(2)
-read=disk_read_of_vm(2)
-write=disk_write_of_vm(2)
-for i,j,k in zip(tx,read,write):
-    print(i,j,k)
-    continue
+
+cpu=cpu_of_vm(which_row_of_replay_csv)
+tx=network_tx_of_vm(which_row_of_replay_csv)
+rx=network_rx_of_vm(which_row_of_replay_csv)
+read=disk_read_of_vm(which_row_of_replay_csv)
+write=disk_write_of_vm(which_row_of_replay_csv)
+init()
+for i in rx:
     network_change(i)
-    disk_io_change(j,k)
+    time.sleep(0.25)
 

@@ -7,7 +7,7 @@ from itertools import islice
 
 #########################################
 #########################################
-which_row_of_replay_csv=1
+which_row_of_replay_csv=2
 which_row_of_cpu_over_head_csv=8
 #########################################
 #########################################
@@ -18,7 +18,7 @@ cpu_overhead=[]
 with open('record.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
-        vm=[[0 for x in range(6)] for y in range(12)]
+        vm=[[0 for x in range(6)] for y in range(8)]
         c=0
         for i in range(19,len(row)-1):
             if (i-19)%10==0:
@@ -30,7 +30,6 @@ with open('record.csv', newline='', encoding='utf-8') as f:
                 vm[c][5]=row[i+8]
                 c+=1
         vm_time.append(vm)
-'''
 with open('cpu_overhead.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in islice(reader, 1, None):
@@ -46,7 +45,6 @@ with open('cpu_overhead.csv', newline='', encoding='utf-8') as f:
                 vm[c][5]=row[i+8]
                 c+=1
         cpu_overhead.append(vm)
-'''
 #print(vm_time)
 def print_log():
     for vv in vm_time:
@@ -110,21 +108,14 @@ def cpu_change(i,l):
         ii=1000
     cmd="echo "+str(ii)+" >/sys/fs/cgroup/cpu/replay/cpu.cfs_quota_us "
     subprocess.Popen(cmd,shell=True,stdout=None)
-def cpu_change_no_overhead(i):
-    u=float(i)
-    ii=(u)*100000
-    ii=int(ii)
-    if ii<=0:
-        ii=1000
-    cmd="echo "+str(ii)+" >/sys/fs/cgroup/cpu/replay/cpu.cfs_quota_us "
-    subprocess.Popen(cmd,shell=True,stdout=None)
+
 def disk_io_change(i,j):
     if i == '0':
         i = '1000'
     if j=='0':
         j= '1000'
     cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
-    cmd2="echo " + "8:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
+    cmd2="echo " + "252:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
     subprocess.Popen(cmd1,shell=True,stdout=None)
     subprocess.Popen(cmd2,shell=True,stdout=None)
 
@@ -132,7 +123,7 @@ def network_change(i):
     if i == '':
         return 
     j=int(i)
-    j=int((j*32)/1024)
+    j=int((j*38)/1024)
     if j == 0:
         j=10
     i = str(j)
@@ -140,7 +131,7 @@ def network_change(i):
     subprocess.Popen(cmd,shell=True,stdout=None)
 
 cpu=cpu_of_vm(which_row_of_replay_csv)
-#overhead=cpu_of_overhead(which_row_of_cpu_over_head_csv)
+overhead=cpu_of_overhead(which_row_of_cpu_over_head_csv)
 tx=network_tx_of_vm(which_row_of_replay_csv)
 rx=network_rx_of_vm(which_row_of_replay_csv)
 read=disk_read_of_vm(which_row_of_replay_csv)
@@ -149,32 +140,28 @@ write=disk_write_of_vm(which_row_of_replay_csv)
 disk_io_change("10240","10240")
 network_change("10000")
 cpu_change("0","0")
-network_tx_cmd = "sudo cgexec -g net_cls:replay ./network/ITGSend -a 192.168.10.1  -T udp -t 1000000 -c 80000"
-network_rx_cmd = "sudo ./network/ITGRecv"
-disk_write_cmd = "while true; do sudo cgexec -g blkio:replay dd if=/dev/zero of=/tmp/loadfile bs=1000M count=10 oflag=direct; done"
-disk_read_cmd = "while true; do sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=60; done"
-#a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
-#b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
-#c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
+network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c 192.168.10.1 -p 5002 -t 300 -u -b 1000mb"
+network_rx_cmd = "sudo iperf -s -u"
+disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime=200  -filename /dev/vda -direct=1 --ioengine=libaio  >/dev/num"
+disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=200 > /dev/null"
+
+a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
+b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
+c=subprocess.Popen("sudo ./memory/a.out",shell=True,stdout=None)
 d=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
-#e=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
-#time.sleep(3)
-#f=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
+e=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
+time.sleep(3)
+f=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
 
 
-#for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
-for i,d,j,k,l in zip(tx,rx,read,write,cpu):
+for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
     start=time.time()
-   # network_change(i)
-   # disk_io_change(j,k)
-   # cpu_change(l,ll)
-    cpu_change_no_overhead(l)
+    network_change(i)
+    disk_io_change(j,k)
+    cpu_change(l,ll)
     end=time.time()
-    time.sleep(1.6)
+    time.sleep(0.25-(start-end))
 
-#disk_io_change("102400","102400")
-#network_change("10000")
-#a.terminate()
-#b.terminate()
-#c.terminate()
+disk_io_change("102400000","102400000")
+network_change("10000000")
