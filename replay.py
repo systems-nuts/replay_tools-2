@@ -121,9 +121,9 @@ disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4
 disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=200 > /dev/null"
 a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
-c=subprocess.Popen("sudo ./memory/a.out ",shell=True,stdout=None)
+c=subprocess.Popen("sudo ./memory_replay/a.out ",shell=True,stdout=None)
 d=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
-f=subprocess.Popen("sudo cgexec -g cpu:replay python3 fake_cpu.py",shell=True,stdout=None)
+f=subprocess.Popen("sudo cgexec -g cpu:replay python3 ./cpu_replay/fake_cpu.py",shell=True,stdout=None)
 time.sleep(3)
 e=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
