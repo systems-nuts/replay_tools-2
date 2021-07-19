@@ -12,7 +12,22 @@ sh cpu_replay/cgroup_init.sh
 sh network_replay/cgroup_init.sh $nic_interface #for example, sh network_replay/cgroup_init.sh ens3
 sh diskio_replay/cgroup_init.sh
 ```
-2. set up the origin csv
+
+2. Set up for script
+```
+diskio we use cgroup to control, however we are using fio. 
+For read, fio just randread the system disk. 
+but for write, fio write may cause the problem, and write to a directory is not fully sufficient, 
+so for each VM, we have to mount a unformatted blk device. 
+For exaple, /dev/sda2 
+Please remember to change the function cmd in disk_io_change, the cgroup need the major:minor number of such device for write restriction. 
+you can get this using lsblk. for our case is 252:0 and 8:0 for system disk. 
+
+Network:
+Both disk and network we are using the command that can setup the time. please change it if the replay time is larger than it. by default it set as 600s
+
+```
+3. set up the origin csv
 ```
 we have three python scripts and a C program, each of them will read a csv file as input.
 1. replay_final.py -> record.csv and cpu_overhead.csv
@@ -33,7 +48,7 @@ all input files please put AT SAME PLACE with the scripts or executable
 ```
 ### For HOST replay rx
 
-3. online different cgroup
+4. online different cgroup
 ```
 check replay_rx, and set up different cgroup. For example, set up tagged ID start from 10:10, 10:11, 10:12 ...
 cgroup_init.sh $interface $number_of_vm_to_connect 
@@ -50,15 +65,15 @@ set up:
 then it will set up a iperf server and client that connect to each of those 10 VMs.
 
 ```
-4. setup csv
+5. setup csv
 ```
-host_rx.py use rx.csv as imput, which is the original log.  
+host_rx.py use rx.csv as imput, which is the original log. 
 ```
 
 
 
 
-5. replay without cpu
+6. replay without cpu
 ```
 To replay without cpu
 Please checkout replay_rx and also change the IP address of the guest vm that going to replay.
@@ -76,7 +91,7 @@ After run REMEMBER TO CLEAN THE MACHINES! USE KILL or KILLALL.
 ```
 After run REMEMBER TO CLEAN THE MACHINES! USE KILL or KILLALL.
 
-5. replay with cpu
+7. replay with cpu
 ```
 The record of replay without cpu csv file should rename as cpu_overhead.csv
 which has the cpu overhead of others replay. 
