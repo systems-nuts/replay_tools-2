@@ -4,29 +4,25 @@ The replay tools are very easy, leverage on cgroup.
 
 pre-requisites: linux cgroup support -> cpu, blkio, network_cls
 
-How to play with this easy tool? 
-with sudo all the time is needed
+### For each VM client:
+
 1. online all cgroup
 ```
-sh cpu/cgroup_init.sh
-sh network/cgroup_init.sh $nic_interface #for example, sh network/cgroup_init.sh ens3
-sh diskio/cgroup_init.sh
+sh cpu_replay/cgroup_init.sh
+sh network_replay/cgroup_init.sh $nic_interface #for example, sh network_replay/cgroup_init.sh ens3
+sh diskio_replay/cgroup_init.sh
 ```
-2. set up network sender on host to replay the rx
-put the dir network/ to some place
-```
-scp -r network kone:~
-``` 
-3. set up the origin csv
+2. set up the origin csv
 ```
 we have three python scripts and a C program, each of them will read a csv file as input.
-1. process.py -> record.csv and cpu_overhead.csv
-2. process_no_cpu.py -> record.csv
-3. network/host_rx.py -> rx.csv
-4. memory/memory_replay.c -> memory_record
+1. replay_final.py -> record.csv and cpu_overhead.csv
+2. replay.py -> record.csv
+3. memory/memory_replay.c -> memory_record
 
 for all python scripts, you have to tell which raw of virt-top output vm is the one you going to replay.
 PLease open the script and change the $Var on the top line. The number start with 1 instead of 0!!!
+
+For example, for replay vm1, the which_row_of_replay_csv has to be 1, and which_row_of_cpu_over_head_csv has to be 1 too. 
 
 there is a helper.py to help you check which raw. helper.py will print the data of the raw you have choosen. 
 
@@ -35,17 +31,45 @@ for C program, the a.out is the exeutable file, the memory_record is the file fr
 all input files please put AT SAME PLACE with the scripts or executable
 
 ```
-4. replay without cpu
+### For HOST replay rx
+
+3. online different cgroup
+```
+check replay_rx, and set up different cgroup. For example, set up tagged ID start from 10:10, 10:11, 10:12 ...
+cgroup_init.sh $interface $number_of_vm_to_connect 
+i.e.  
+cgroup_init.sh br1 10
+the tagged id will start from 10:10 to 10:20
+and this will be used in host_rx.py
+at host_rx.py
+set up:
+    number_of_machines=6
+    cgroup_num=10
+    port=5001
+    ip=81
+then it will set up a iperf server and client that connect to each of those 10 VMs.
+
+```
+4. setup csv
+```
+host_rx.py use rx.csv as imput, which is the original log.  
+```
+
+
+
+
+5. replay without cpu
 ```
 To replay without cpu
-Please checkout host_rx.py and also change the IP address of the guest vm that going to replay.
+Please checkout replay_rx and also change the IP address of the guest vm that going to replay.
+please run those scripts on all machine at same time, try use boradcast command.
 
 from inside: 
-sudo sh python3 process_no_cpu.py
+sudo sh python3 replay.py
 outside:
 sudo sh python3 host_rx.py
 
-In the meanwhile you should start record. 
+In the meanwhile you should start record also. 
 
 After run REMEMBER TO CLEAN THE MACHINES! USE KILL or KILLALL.
 
@@ -67,7 +91,7 @@ This time, the replay cpu will minus the replay overhead first then replay.
 Then inside:
 Please checkout host_rx.py and also change the IP address of the guest vm that going to replay.
 
-sudo sh python3 process.py
+sudo sh python3 replay_final.py
 outside:
 sudo sh python3 host_rx.py 
 In the meanwhile you should start record. 
