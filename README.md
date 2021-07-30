@@ -10,7 +10,7 @@ pre-requisites: linux cgroup support -> cpu, blkio, network_cls
 1. online all cgroup
 ```
 sh cpu_replay/cgroup_init.sh
-sh network_replay/cgroup_init.sh $nic_interface #for example, sh network_replay/cgroup_init.sh ens3
+sh tx/cgroup_init.sh $nic_interface #for example, sh tx/cgroup_init.sh ens3
 sh diskio_replay/cgroup_init.sh
 ```
 
@@ -36,7 +36,7 @@ we have three python scripts and a C program, each of them will read a csv file 
 3. memory/memory_replay.c -> memory_record
 
 for all python scripts, you have to tell which raw of virt-top output vm is the one you going to replay.
-PLease open the script and change the $Var on the top line. The number start with 1 instead of 0!!!
+The number start with 1 instead of 0.
 
 For example, for replay vm1, the which_row_of_replay_csv has to be 1, and which_row_of_cpu_over_head_csv has to be 1 too. 
 
@@ -54,7 +54,7 @@ all input files please put AT SAME PLACE with the scripts or executable
 check replay_rx, and set up different cgroup. For example, set up tagged ID start from 10:10, 10:11, 10:12 ...
 cgroup_init.sh $interface $number_of_vm_to_connect 
 i.e.  
-cgroup_init.sh br1 10
+rx/cgroup_init.sh br1 10
 the tagged id will start from 10:10 to 10:20
 and this will be used in host_rx.py
 at host_rx.py
