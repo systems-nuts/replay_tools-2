@@ -134,6 +134,6 @@ for i,d,j,k,l in zip(tx,rx,read,write,cpu):
     network_change(i)
     #cpu_change(l)
     end=time.time()
-    if end-start<0.3:
-        time.sleep(0.3-(end-start))
+    if end-start<1:
+        time.sleep(1-(end-start))
 

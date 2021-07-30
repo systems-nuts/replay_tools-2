@@ -71,6 +71,6 @@ for i in range(0,len(rx[0])):
     for j in range(0,len(rx)):
         network_change(rx[j][i],major,minor+j)
     end=time.time()
-    time.sleep(0.3-(end-start))
+    time.sleep(1-(end-start))
     end=time.time() 
 

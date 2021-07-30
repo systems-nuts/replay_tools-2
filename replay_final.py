@@ -123,7 +123,7 @@ def network_change(i):
     if i == '':
         return 
     j=int(i)
-    j=int((j*38)/1024)
+    j=int((j*8)/1024)
     if j == 0:
         j=10
     i = str(j)
@@ -161,7 +161,7 @@ for i,d,j,k,l,ll in zip(tx,rx,read,write,cpu,overhead):
     disk_io_change(j,k)
     cpu_change(l,ll)
     end=time.time()
-    time.sleep(0.25-(start-end))
+    time.sleep(1-(start-end))
 
 disk_io_change("102400000","102400000")
 network_change("10000000")
