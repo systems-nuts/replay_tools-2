@@ -36,38 +36,38 @@ def network_change(i,major,minor):
         j=1000
     i = str(j)
     cmd="sudo tc class change dev br1 parent 10: classid "+str(major)+":"+str(minor)+" htb rate "+ i+"kbit"
-    #print(cmd)
     subprocess.Popen(cmd,shell=True,stdout=None)
 c=0
 
 
 def init():
-    number_of_machines=6
-    cgroup_num=10
+    number_of_machines=2
+    cgroup_num=60
     port=5001
-    ip=81
+    ip=51
     for i in range(0,number_of_machines):
         print(port)
-        port+=1
         network_rx_cmd = "sudo iperf -s -u -p "+str(port)
         subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
+        port+=1
     time.sleep(3)
     for i in range(0,number_of_machines):
+        network_tx_cmd = "sudo cgexec -g net_cls:replay"+str(cgroup_num)+" iperf -c 192.168.10."+str(ip)+"  -t 600 -u -b 100mb"
+        print(network_tx_cmd)
+        subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
         ip+=1
         cgroup_num+=1
-        network_tx_cmd = "sudo cgexec -g net_cls:replay"+str(cgroup_num)+" iperf -c 192.168.10"+str(ip)+"  -t 600 -u -b 100mb"
-        subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
 rx=[]
 
-for i in range(1,7):
+for i in range(1,3):
     rx.append(network_rx_of_vm(i))
 print("Please remember sudo")
 init()
 major=10
 for i in range(0,len(rx[0])):
     start=time.time()
-    minor=10
+    minor=60
     for j in range(0,len(rx)):
         network_change(rx[j][i],major,minor+j)
     end=time.time()
