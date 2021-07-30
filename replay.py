@@ -89,10 +89,10 @@ def disk_io_change(i,j):
         i = '1000'
     if j=='0' or j == '':
         j= '1000'
-    j=str(int(j)*4)
+    j=str(int(j))
     cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
     cmd2="echo " + "252:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
-    cmd3="cat /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device"
+    #cmd3="cat /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device"
     subprocess.Popen(cmd1,shell=True,stdout=None)
     subprocess.Popen(cmd2,shell=True,stdout=None)
 def network_change(i):
