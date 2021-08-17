@@ -3,6 +3,12 @@ import time
 import os
 import subprocess
 from itertools import islice
+
+#######################################
+vm_ip=[""]
+
+
+#######################################
 vm_time=[]
 with open('rx.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
