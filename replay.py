@@ -7,7 +7,13 @@ from itertools import islice
 #########################################
 #########################################
 which_row_of_replay_csv=1
-which_row_of_cpu_over_head_csv=8
+measurements_time=1
+device_num="252:0"
+device_name="/dev/vda"
+run_time="600"
+nic_name="ens3"
+iperf_server_ip="192.168.10.1"
+iperf_server_port= "5001"
 #########################################
 #########################################
 
@@ -90,8 +96,8 @@ def disk_io_change(i,j):
     if j=='0' or j == '':
         j= '1000'
     j=str(int(j))
-    cmd1="echo " + "8:0 " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
-    cmd2="echo " + "252:0 " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
+    cmd1="echo " + device_num + " " + i +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.read_bps_device  "
+    cmd2="echo " + device_num + " " + j +" > /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device  "
     #cmd3="cat /sys/fs/cgroup/blkio/replay/blkio.throttle.write_bps_device"
     subprocess.Popen(cmd1,shell=True,stdout=None)
     subprocess.Popen(cmd2,shell=True,stdout=None)
@@ -99,11 +105,11 @@ def network_change(i):
     if i == '':
         return 
     j=int(i)
-    j=int((j*27)/1024)
+    j=int((j*8)/(1024*measurements_time))
     if j == 0:
         j=10000
     i = str(j)
-    cmd="sudo tc class change dev ens3 parent 10: classid 10:1 htb rate "+ i+"kbit"
+    cmd="sudo tc class change dev "+ nic_name +" parent 10: classid 10:1 htb rate "+ i+"kbit"
     subprocess.Popen(cmd,shell=True,stdout=None)
 
 cpu=cpu_of_vm(which_row_of_replay_csv)
@@ -112,18 +118,20 @@ rx=network_rx_of_vm(which_row_of_replay_csv)
 read=disk_read_of_vm(which_row_of_replay_csv)
 write=disk_write_of_vm(which_row_of_replay_csv)
 
-
+#set disk io and network change as high speed
 disk_io_change("10240","10240")
 network_change("10000")
-network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c 192.168.10.1 -p 5001 -t 600 -u -b 50mb"
+network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c "+iperf_server_ip+" -p "+iperf_server_port+" -t "+ runtime +" -u -b 100mb"
 network_rx_cmd = "sudo iperf -s -u"
-disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime=600  -filename /dev/vda -direct=1 --ioengine=libaio  >/dev/null"
-disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename=/dev/sda2 -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime=200 > /dev/null"
+disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime="+ runtime +"  -filename " + device_name + " -direct=1 --ioengine=libaio  >/dev/null"
+disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename " + device_name + " -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime="+ runtime +" > /dev/null"
 a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
 c=subprocess.Popen("sudo ./memory_replay/a.out ",shell=True,stdout=None)
 d=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
-#f=subprocess.Popen("sudo cgexec -g cpu:replay python3 ./cpu_replay/fake_cpu.py",shell=True,stdout=None)
+
+f=subprocess.Popen("sudo cgexec -g cpu:replay python3 ./cpu_replay/fake_cpu.py",shell=True,stdout=None)
+
 time.sleep(3)
 e=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
@@ -132,8 +140,10 @@ for i,d,j,k,l in zip(tx,rx,read,write,cpu):
     start=time.time()
     disk_io_change(j,k)
     network_change(i)
-    #cpu_change(l)
+    cpu_change(l)
     end=time.time()
     if end-start<1:
-        time.sleep(1-(end-start))
-
+        time.sleep(measurements_time-(end-start))
+#set disk io and network change as high speed agai
+disk_io_change("10240","10240")
+network_change("10000")
