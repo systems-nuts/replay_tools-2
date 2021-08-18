@@ -15,8 +15,8 @@ disk_device_num="252:0"
 disk_device_name="/dev/vda"
 run_time="600"
 nic_name="ens3"
-iperf_server_ip="192.168.10.1"
-iperf_server_port= "5001"
+iperf_target_ip="192.168.10.1"
+iperf_target_port= "5003"
 #########################################
 #########################################
 
