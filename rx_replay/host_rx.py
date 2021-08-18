@@ -4,11 +4,17 @@ import os
 import subprocess
 from itertools import islice
 
-#######################################
-vm_ip=[""]
+#########################################
+#########################################
+measurements_time=1
+run_time="600"
+nic_name="ens3"
+iperf_server_ip=[]
+iperf_server_port=[]
+cgroup_minor_num=[]
+#########################################
+#########################################
 
-
-#######################################
 vm_time=[]
 with open('rx.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
@@ -37,7 +43,7 @@ def network_change(i,major,minor):
     if i == '':
         return 
     j=int(i)
-    j=int((j*27)/1024)
+    j=int((j*8)/(1024*measurements_time))
     if j == 0:
         j=1000
     i = str(j)
@@ -77,6 +83,6 @@ for i in range(0,len(rx[0])):
     for j in range(0,len(rx)):
         network_change(rx[j][i],major,minor+j)
     end=time.time()
-    time.sleep(1-(end-start))
-    end=time.time() 
+    if end-start<measurements_time:
+        time.sleep(measurements_time-(end-start))
 
