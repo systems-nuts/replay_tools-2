@@ -11,7 +11,7 @@ run_time="600"
 nic_name="br1"
 major=10
 replay_raw=[]
-iperf_server_ip=[]
+iperf_target_ip=[]
 iperf_server_port=[]
 cgroup_minor_num=[]
 #########################################
@@ -19,11 +19,11 @@ cgroup_minor_num=[]
 with open('config_host', newline='', encoding='utf-8') as config:
     for row in config:
         row=row.split()
-        iperf_server_ip.append(row[0])
+        iperf_target_ip.append(row[0])
         iperf_server_port.append(row[1])
         cgroup_minor_num.append(row[2])
         replay_raw.append(row[3])
-number_of_machines=len(iperf_server_ip)
+number_of_machines=len(iperf_target_ip)
 print(number_of_machines)
 vm_time=[]
 with open('rx.csv', newline='', encoding='utf-8') as f:
@@ -70,7 +70,7 @@ def init():
         subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
     time.sleep(3)
     for i in range(0,number_of_machines):
-        network_tx_cmd = "sudo cgexec -g net_cls:replay"+cgroup_minor_num[i]+" iperf -c "+iperf_server_ip[i]+"  -t "+run_time+" -u -b 100mb"
+        network_tx_cmd = "sudo cgexec -g net_cls:replay"+cgroup_minor_num[i]+" iperf -c "+iperf_target_ip[i]+"  -t "+run_time+" -u -b 100mb"
         #print(network_tx_cmd)
         subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
 
