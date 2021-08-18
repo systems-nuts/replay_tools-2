@@ -10,5 +10,6 @@ do
 	sudo sh -c "echo 0x1000$i > /sys/fs/cgroup/net_cls/replay$i/net_cls.classid"
 	sudo tc class add dev $1 parent 10: classid 10:$i htb rate 10mbit
 	sudo tc filter add dev $1 parent 10:$i protocol ip prio 10 handle 1: cgroup
+	echo "cgroup replay$i with major:minor -> 10:$i on dev $1 "
 done
 
