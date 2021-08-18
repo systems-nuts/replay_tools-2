@@ -11,8 +11,8 @@ from itertools import islice
 which_row_of_replay_csv=1
 which_row_of_cpu_over_head_csv=1
 measurements_time=1
-device_num="252:0"
-device_name="/dev/vda"
+disk_device_num="252:0"
+disk_device_name="/dev/vda"
 run_time="600"
 nic_name="ens3"
 iperf_server_ip="192.168.10.1"
@@ -149,10 +149,10 @@ write=disk_write_of_vm(which_row_of_replay_csv)
 disk_io_change("10240","10240")
 network_change("10000")
 cpu_change("0","0")
-network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c "+iperf_server_ip+" -p "+iperf_server_port+" -t "+ runtime +" -u -b 1000mb"
+network_tx_cmd = "sudo cgexec -g net_cls:replay iperf -c "+iperf_target_ip+" -p "+str(iperf_target_port)+" -t "+ str(run_time) +" -u -b 1000mb"
 network_rx_cmd = "sudo iperf -s -u"
-disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime="+ runtime +"  -filename " + device_name + " -direct=1 --ioengine=libaio  >/dev/null"
-disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename " + device_name + " -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime="+ runtime +" > /dev/null"
+disk_write_cmd = "sudo cgexec -g blkio:replay fio -name iops -rw=randwrite -bs=4m -runtime="+ str(run_time) +"  -filename " + disk_device_name + " -direct=1 --ioengine=libaio  >/dev/null"
+disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename " + disk_device_name + " -direct=1 -rw=read  -bs=4k -size=1G  -name=seqread  -runtime="+ str(run_time) +" > /dev/null"
 
 
 a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
