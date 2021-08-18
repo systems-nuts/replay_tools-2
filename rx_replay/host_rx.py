@@ -8,13 +8,23 @@ from itertools import islice
 #########################################
 measurements_time=1
 run_time="600"
-nic_name="ens3"
+nic_name="br1"
+major=10
+replay_raw=[]
 iperf_server_ip=[]
 iperf_server_port=[]
 cgroup_minor_num=[]
 #########################################
 #########################################
-
+with open('config_host', newline='', encoding='utf-8') as config:
+    for row in config:
+        row=row.split()
+        iperf_server_ip.append(row[0])
+        iperf_server_port.append(row[1])
+        cgroup_minor_num.append(row[2])
+        replay_raw.append(row[3])
+number_of_machines=len(iperf_server_ip)
+print(number_of_machines)
 vm_time=[]
 with open('rx.csv', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
@@ -47,41 +57,32 @@ def network_change(i,major,minor):
     if j == 0:
         j=1000
     i = str(j)
-    cmd="sudo tc class change dev br1 parent 10: classid "+str(major)+":"+str(minor)+" htb rate "+ i+"kbit"
+    cmd="sudo tc class change dev "+str(nic_name)+" parent "+str(major)+": classid "+str(major)+":"+str(minor)+" htb rate "+ i+"kbit"
+    #print(cmd)
     subprocess.Popen(cmd,shell=True,stdout=None)
 c=0
 
 
 def init():
-    number_of_machines=2
-    cgroup_num=60
-    port=5001
-    ip=51
     for i in range(0,number_of_machines):
-        print(port)
-        network_rx_cmd = "sudo iperf -s -u -p "+str(port)
+        network_rx_cmd = "sudo iperf -s -u -p "+iperf_server_port[i]
+        #print(network_rx_cmd)
         subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
-        port+=1
     time.sleep(3)
     for i in range(0,number_of_machines):
-        network_tx_cmd = "sudo cgexec -g net_cls:replay"+str(cgroup_num)+" iperf -c 192.168.10."+str(ip)+"  -t 600 -u -b 100mb"
-        print(network_tx_cmd)
+        network_tx_cmd = "sudo cgexec -g net_cls:replay"+cgroup_minor_num[i]+" iperf -c "+iperf_server_ip[i]+"  -t "+run_time+" -u -b 100mb"
+        #print(network_tx_cmd)
         subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
-        ip+=1
-        cgroup_num+=1
 
 rx=[]
-
-for i in range(1,3):
-    rx.append(network_rx_of_vm(i))
+for i in replay_raw:
+    rx.append(network_rx_of_vm(int(i)))
 print("Please remember sudo")
 init()
-major=10
 for i in range(0,len(rx[0])):
     start=time.time()
-    minor=60
-    for j in range(0,len(rx)):
-        network_change(rx[j][i],major,minor+j)
+    for j in range(0,number_of_machines):
+        network_change(rx[j][i],major,cgroup_minor_num[j])
     end=time.time()
     if end-start<measurements_time:
         time.sleep(measurements_time-(end-start))
