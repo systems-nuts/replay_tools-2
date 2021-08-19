@@ -132,10 +132,10 @@ disk_read_cmd = "sudo cgexec -g blkio:replay fio -filename " + disk_device_name 
 
 a=subprocess.Popen(disk_write_cmd,shell=True,stdout=None)
 b=subprocess.Popen(disk_read_cmd,shell=True,stdout=None)
-c=subprocess.Popen("sudo ./memory_replay/a.out ",shell=True,stdout=None)
+c=subprocess.Popen("sudo ./cpu_mem_scipts/a.out ",shell=True,stdout=None)
 d=subprocess.Popen(network_rx_cmd,shell=True,stdout=None)
 
-f=subprocess.Popen("sudo cgexec -g cpu:replay python3 ./cpu_replay/fake_cpu.py",shell=True,stdout=None)
+f=subprocess.Popen("sudo cgexec -g cpu:replay python3 ./cpu_mem_scipts/fake_cpu.py",shell=True,stdout=None)
 
 time.sleep(3)
 e=subprocess.Popen(network_tx_cmd,shell=True,stdout=None)
