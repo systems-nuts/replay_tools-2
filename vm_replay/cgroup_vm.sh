@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo mkdir /sys/fs/cgroup/cpu/replay
+sudo mkdir -p /sys/fs/cgroup/cpu/replay
 sudo mkdir -p /sys/fs/cgroup/blkio/replay
 sudo mkdir -p /sys/fs/cgroup/net_cls/replay
 sudo sh -c "echo 0x100001 > /sys/fs/cgroup/net_cls/replay/net_cls.classid"
