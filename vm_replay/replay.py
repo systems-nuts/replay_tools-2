@@ -6,6 +6,9 @@ from itertools import islice
 
 #########################################
 #########################################
+core_of_cpu_in_ori=208
+core_of_vcpu_ori=16
+core_of_vcpu_now=8
 which_row_of_replay_csv=1
 measurements_time=1
 disk_device_num="252:0"
@@ -83,7 +86,8 @@ def cpu_change(i):
     if i == "":
         i=-1
     u=float(i)
-    ii=u*100000
+    usage=(core_of_cpu_in_ori*u)/core_of_vcpu_ori;
+    ii=core_of_vcpu_now*usage*100000
     ii=int(ii)
     if ii<=1000:
         ii=1000
