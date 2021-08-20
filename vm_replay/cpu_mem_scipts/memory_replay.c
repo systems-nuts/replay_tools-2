@@ -120,7 +120,8 @@ int current_sys_memory()
         	}
     	}
 	fclose(fpMemInfo);
-	return o->total - (o->free - o->buffers - o->cached - o->active - o->inactive - o->apages - o->mapped - o->shmem - o->slab - o->sr - o->su - o->ks - o->pt);
+	//return o->total - (o->free - o->buffers - o->cached - o->active - o->inactive - o->apages - o->mapped - o->shmem - o->slab - o->sr - o->su - o->ks - o->pt);
+	return o->total - o->free;
 }
 
 void add_memory(int __memory)
