@@ -11,6 +11,8 @@ def processing(M):
     for i in M:
         if i.isdigit():
             L.append(int(i))
+        else:
+            L.append(int(9999999999))
     P=np.percentile(L,99)
     for i in L:
         if i <= int(P):
