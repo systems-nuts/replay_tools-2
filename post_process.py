@@ -5,11 +5,19 @@ import seaborn as sns
 import numpy as np
 #make sure all data is digital 
 def processing(M):
+    #total=0
     L=[]
+    H=[]
     for i in M:
         if i.isdigit():
             L.append(int(i))
-    return L
+    P=np.percentile(L,99)
+    for i in L:
+        if i <= int(P):
+            H.append(int(i))
+        else:
+            H.append(int(P))
+    return H
 #the data dir
 
 g = os.walk("test_KVM_4_13_nonovercommit")
