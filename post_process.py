@@ -48,13 +48,30 @@ for i,j in zip(ref,files):
     else:
         timesyscall[int(index)-1].extend(tmp)
     f.close()
+    
+#check the size
+for i in timetctxsw2:
+    print(len(i))
+for i in timetctxsw:
+    print(len(i))
+for i in timectxsw:
+    print(len(i))
+for i in timesyscall:
+    print(len(i))
+    
 
 
 # create data frame, please make sure all the origin data is same size. otherwise there is bug.
-timectxsw=pd.DataFrame(data=timectxsw)
-timetctxsw=pd.DataFrame(data=timetctxsw)
-timetctxsw2=pd.DataFrame(data=timetctxsw2)
-timesyscall=pd.DataFrame(data=timesyscall)
+timectxsw=np.array(timectxsw)
+timetctxsw=np.array(timetctxsw)
+timetctxsw2=np.array(timetctxsw2)
+timesyscall=np.array(timesyscall)
+
+# range also need to change
+timectxsw=pd.DataFrame(data=timectxsw.T,columns=list(range(1,14)))
+timetctxsw=pd.DataFrame(data=timetctxsw.T,columns=list(range(1,14)))
+timetctxsw2=pd.DataFrame(data=timetctxsw2.T,columns=list(range(1,14)))
+timesyscall=pd.DataFrame(data=timesyscall.T,columns=list(range(1,14)))
 
 ax = sns.violinplot(data=timectxsw)
 plt.savefig('test_KVM_4_13_nonovercommit/timectxsw.pdf')
