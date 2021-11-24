@@ -3,17 +3,24 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-#make sure all data is digital 
+import random 
 def processing(M):
+    #total=0
     L=[]
+    H=[]
     for i in M:
         if i.isdigit():
             L.append(int(i))
-    return L
-#the data dir
-
+        else:
+             L.append(int(99999999))
+    P=np.percentile(L,99)
+    for i in L:
+        if i <= int(P):
+            H.append(int(i))
+        else:
+            H.append(int(P))
+    return H
 g = os.walk("test_KVM_4_13_nonovercommit")
-
 ref=[]
 files=[]
 for path,dir_list,file_list in g:  
@@ -22,16 +29,11 @@ for path,dir_list,file_list in g:
         files.append(out)
         out = out.split('/')
         ref.append(out[1:])
-#output list, for 13 vm, for 4vm you should change it to *4
-timectxsw=[[]]*13
-timetctxsw=[[]]*13
-timetctxsw2=[[]]*13
-timesyscall=[[]]*13
-# put all data in one list
-# for example, 13 vm with 4cpu, there will be 13 index for each list, and 4cpu data will be 
-# extend into this list and we will caculate the average later.
-# for example, timetctxsw2[] will have 13, and each index contain 4vcpus data. 
-# 
+
+timectxsw=[[] for i in range(13)]
+timetctxsw=[[] for i in range(13)]
+timetctxsw2=[[] for i in range(13)]
+timesyscall=[[] for i in range(13)]
 for i,j in zip(ref,files):
     index=i[0]
     exactly=i[2]
@@ -49,21 +51,47 @@ for i,j in zip(ref,files):
         timesyscall[int(index)-1].extend(tmp)
     f.close()
 
+for i in timetctxsw2:
+    print(len(i))
+for i in timetctxsw:
+    print(len(i))
+for i in timectxsw:
+    print(len(i))
+for i in timesyscall:
+    print(len(i))
 
-# create data frame, please make sure all the origin data is same size. otherwise there is bug.
-timectxsw=pd.DataFrame(data=timectxsw)
-timetctxsw=pd.DataFrame(data=timetctxsw)
-timetctxsw2=pd.DataFrame(data=timetctxsw2)
-timesyscall=pd.DataFrame(data=timesyscall)
+_timectxsw=np.array(timectxsw)
+_timetctxsw=np.array(timetctxsw)
+_timetctxsw2=np.array(timetctxsw2)
+_timesyscall=np.array(timesyscall)
 
-ax = sns.violinplot(data=timectxsw)
-plt.savefig('test_KVM_4_13_nonovercommit/timectxsw.pdf')
+timectxsw=pd.DataFrame(data=_timectxsw.T,columns=list(range(1,14)))
+ax = sns.violinplot(data=timectxsw,scale='area')
+timectxsw=pd.DataFrame(data=_timectxsw.T,columns=list(range(0,13)))
+sns.lineplot(data=timectxsw.mean())
+plt.savefig('pdf/timectxsw.pdf')
+plt.clf()
+
+timetctxsw=pd.DataFrame(data=_timetctxsw.T,columns=list(range(1,14)))
 ax = sns.violinplot(data=timetctxsw)
-plt.savefig('test_KVM_4_13_nonovercommit/timetctxsw.pdf')
+timetctxsw=pd.DataFrame(data=_timetctxsw.T,columns=list(range(0,13)))
+sns.lineplot(data=timetctxsw.mean())
+plt.savefig('pdf/timetctxsw.pdf')
+plt.clf()
+
+timetctxsw2=pd.DataFrame(data=_timetctxsw2.T,columns=list(range(1,14)))
 ax = sns.violinplot(data=timetctxsw2)
-plt.savefig('test_KVM_4_13_nonovercommit/timetctxsw2.pdf')
+timetctxsw2=pd.DataFrame(data=_timetctxsw2.T,columns=list(range(0,13)))
+sns.lineplot(data=timetctxsw2.mean())
+plt.savefig('pdf/timetctxsw2.pdf')
+plt.clf()
+
+timesyscall=pd.DataFrame(data=_timesyscall.T,columns=list(range(1,14)))
 ax = sns.violinplot(data=timesyscall)
-plt.savefig('test_KVM_4_13_nonovercommit/timesyscall.pdf')
+timesyscall=pd.DataFrame(data=_timesyscall.T,columns=list(range(0,13)))
+sns.lineplot(data=timesyscall.mean())
+plt.savefig('pdf/timesyscall.pdf')
+plt.clf()
 #print(processing(output[3][0]))
 '''
 r=[]
