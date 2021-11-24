@@ -12,7 +12,11 @@ def processing(M):
         if i.isdigit():
             L.append(int(i))
         else:
+<<<<<<< HEAD
              L.append(int(99999999))
+=======
+            L.append(int(9999999999))
+>>>>>>> f475e2652221f4cf0edacac7b26de5d35917eb0a
     P=np.percentile(L,99)
     for i in L:
         if i <= int(P):
@@ -20,6 +24,11 @@ def processing(M):
         else:
             H.append(int(P))
     return H
+<<<<<<< HEAD
+=======
+#the data dir
+
+>>>>>>> f475e2652221f4cf0edacac7b26de5d35917eb0a
 g = os.walk("test_KVM_4_13_nonovercommit")
 ref=[]
 files=[]
@@ -50,6 +59,17 @@ for i,j in zip(ref,files):
     else:
         timesyscall[int(index)-1].extend(tmp)
     f.close()
+    
+#check the size
+for i in timetctxsw2:
+    print(len(i))
+for i in timetctxsw:
+    print(len(i))
+for i in timectxsw:
+    print(len(i))
+for i in timesyscall:
+    print(len(i))
+    
 
 for i in timetctxsw2:
     print(len(i))
@@ -60,10 +80,24 @@ for i in timectxsw:
 for i in timesyscall:
     print(len(i))
 
+<<<<<<< HEAD
 _timectxsw=np.array(timectxsw)
 _timetctxsw=np.array(timetctxsw)
 _timetctxsw2=np.array(timetctxsw2)
 _timesyscall=np.array(timesyscall)
+=======
+# create data frame, please make sure all the origin data is same size. otherwise there is bug.
+timectxsw=np.array(timectxsw)
+timetctxsw=np.array(timetctxsw)
+timetctxsw2=np.array(timetctxsw2)
+timesyscall=np.array(timesyscall)
+
+# range also need to change
+timectxsw=pd.DataFrame(data=timectxsw.T,columns=list(range(1,14)))
+timetctxsw=pd.DataFrame(data=timetctxsw.T,columns=list(range(1,14)))
+timetctxsw2=pd.DataFrame(data=timetctxsw2.T,columns=list(range(1,14)))
+timesyscall=pd.DataFrame(data=timesyscall.T,columns=list(range(1,14)))
+>>>>>>> f475e2652221f4cf0edacac7b26de5d35917eb0a
 
 timectxsw=pd.DataFrame(data=_timectxsw.T,columns=list(range(1,14)))
 ax = sns.violinplot(data=timectxsw,scale='area')
